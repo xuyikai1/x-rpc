@@ -66,16 +66,21 @@ public class RpcConnectManager {
 
     private volatile AtomicInteger handlerIdx = new AtomicInteger();
 
+    private static volatile RpcConnectManager RPC_CONNECT_MANAGER = new RpcConnectManager();
     /**
      * 统一使用单例工厂生产ConnectManager单例
      */
     private RpcConnectManager(){}
 
+    public static RpcConnectManager getInstance() {
+        return RPC_CONNECT_MANAGER;
+    }
+
     /**
      * 客户端发起连接（调用连接管理器的连接方法）
      * 更新可用的服务器连接
      */
-    private void connect(List<String> availableAddresses){
+    public void connect(List<String> availableAddresses){
         if(CollectionUtil.isEmpty(availableAddresses)){
             // 添加告警
             log.error(" no available server address! ");
@@ -140,7 +145,7 @@ public class RpcConnectManager {
         //	添加监听 连接成功的时候 将新连接放入缓存中
         channelFuture.addListener((ChannelFutureListener) future -> {
             if(future.isSuccess()) {
-                log.info("successfully connect to remote server, remote address:{}",socketAddress);
+                log.info("successfully initClient to remote server, remote address:{}",socketAddress);
                 // 从pipeline中找到业务处理的RpcClientHandler
                 RpcClientHandler handler = future.channel().pipeline().get(RpcClientHandler.class);
                 // 添加至缓存中
@@ -152,7 +157,7 @@ public class RpcConnectManager {
         channelFuture.channel().closeFuture().addListener((ChannelFutureListener) future -> {
             log.info("channelFuture.channel close complete, remote address:{}",socketAddress);
             future.channel().eventLoop().schedule(() -> {
-                log.warn("connect fail, ready to reconnect.. ");
+                log.warn("initClient fail, ready to reconnect.. ");
                 // 清空对应资源再重新发起连接
                 clearAllConnectedResources();
                 connect(bootstrap, socketAddress);
@@ -166,7 +171,6 @@ public class RpcConnectManager {
      * @param handler
      */
     private void addHandler(RpcClientHandler handler) {
-
         // 连接成功添加到缓存中
         InetSocketAddress socketAddress = (InetSocketAddress) handler.getChannel().remoteAddress();
         availableHandlerMap.put(socketAddress, handler);
@@ -231,7 +235,7 @@ public class RpcConnectManager {
                 }
             } catch (InterruptedException e) {
                 log.error(" waiting for available node is interrupted !");
-                throw new RuntimeException("no connect any servers!", e);
+                throw new RuntimeException("no initClient any servers!", e);
             }
         }
         if(!isRunning) {

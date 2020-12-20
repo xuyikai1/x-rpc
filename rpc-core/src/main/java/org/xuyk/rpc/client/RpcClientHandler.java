@@ -1,14 +1,19 @@
 package org.xuyk.rpc.client;
 
+import cn.hutool.json.JSONUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.xuyk.rpc.entity.RpcRequest;
+import org.xuyk.rpc.entity.RpcResponse;
 
 import java.net.SocketAddress;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @Author: Xuyk
@@ -17,14 +22,17 @@ import java.net.SocketAddress;
  */
 @Slf4j
 @Getter
-public class RpcClientHandler extends ChannelInboundHandlerAdapter {
+public class RpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
 
     private Channel channel;
     /**
      * 客户端所要连接的远程地址SocketAddress
      */
     private SocketAddress socketAddress;
-
+    /**
+     * key：requestId value：RpcFuture
+     */
+    private Map<String, RpcFuture> pendingRpcResponseTable = new ConcurrentHashMap<>();
     /**
      * 通道注册的时候触发此方法
      */
@@ -44,12 +52,22 @@ public class RpcClientHandler extends ChannelInboundHandlerAdapter {
         this.socketAddress = this.channel.remoteAddress();
     }
 
+
+    /**
+     * 对服务端的响应内容做处理
+     * @param ctx
+     * @param response
+     * @throws Exception
+     */
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        String request = (String) msg;
-        String response =  "Client :" + request;
-        log.info("Client receive Server msg:{}",request);
-        // TODO 释放资源
+    protected void channelRead0(ChannelHandlerContext ctx, RpcResponse response) throws Exception {
+        log.info("Client receive Server msg:{}", JSONUtil.toJsonStr(response));
+        String requestId = response.getRequestId();
+        RpcFuture rpcFuture = pendingRpcResponseTable.get(requestId);
+        if(rpcFuture != null) {
+            pendingRpcResponseTable.remove(requestId);
+            rpcFuture.done(response);
+        }
     }
 
     /**
@@ -58,6 +76,18 @@ public class RpcClientHandler extends ChannelInboundHandlerAdapter {
      */
     void close() {
         channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+    }
+
+    /**
+     * 	异步发送请求方法
+     * @param request
+     * @return
+     */
+    public RpcFuture sendRequest(RpcRequest request) {
+        RpcFuture rpcFuture = new RpcFuture(request);
+        pendingRpcResponseTable.put(request.getRequestId(), rpcFuture);
+        channel.writeAndFlush(request);
+        return rpcFuture;
     }
 
 }
