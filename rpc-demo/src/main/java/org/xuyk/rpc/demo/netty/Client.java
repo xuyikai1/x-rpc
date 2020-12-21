@@ -1,4 +1,4 @@
-package org.xuyk.netty.demo;
+package org.xuyk.rpc.demo.netty;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
@@ -7,18 +7,19 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.string.StringDecoder;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 
 /**
  * @Author: Xuyk
  * @Description:
  * @Date: 2020/12/16
  */
+@Slf4j
 public class Client {
 
-    public static void main(String[] args) throws UnknownHostException {
+    public static void main(String[] args) {
         EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(eventLoopGroup)
@@ -37,12 +38,23 @@ public class Client {
         String host = "127.0.0.1";
         int port = 8765;
         InetSocketAddress inetSocketAddress = new InetSocketAddress(host,port);
-        ChannelFuture cf;
+        ChannelFuture channelFuture;
         try {
-            cf = bootstrap.connect(inetSocketAddress).sync();
+            channelFuture = bootstrap.connect(inetSocketAddress).sync();
+
+            //	添加监听 连接成功
+            channelFuture.addListener((ChannelFutureListener) future -> {
+                if(future.isSuccess()) {
+                    log.info("successfully connect to remote server, remote address:{}",inetSocketAddress);
+                }
+            });
+
+            //	添加监听 连接失败
+            channelFuture.channel().closeFuture().addListener((ChannelFutureListener) future
+                    -> log.info("channelFuture.channel close complete, remote address:{}",inetSocketAddress));
 
             // 发送消息
-            Channel channel = cf.channel();
+            Channel channel = channelFuture.channel();
             channel.writeAndFlush(Unpooled.wrappedBuffer("aaaaabbbbb".getBytes()));
             Thread.sleep(2000);
 

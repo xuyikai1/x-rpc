@@ -3,7 +3,7 @@
 	<!-- 变量LOG_HOME 存放日志的统一路径 -->
 	<property name="LOG_HOME" value="logs" />
 	<!-- 变量APP_NAME 统一路径底下 存放指定应用的log路径 -->
-	<property name="APP_NAME" value="netty-demo"/>
+	<property name="APP_NAME" value="rpc-demo"/>
 
 	<!-- 控制台输出 -->
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">

@@ -1,4 +1,4 @@
-package org.xuyk.netty.demo;
+package org.xuyk.rpc.demo.netty;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;

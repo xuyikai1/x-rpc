@@ -65,17 +65,14 @@ public class RpcConnectManager {
     private volatile boolean isRunning = true;
 
     private volatile AtomicInteger handlerIdx = new AtomicInteger();
-
-    private static volatile RpcConnectManager RPC_CONNECT_MANAGER = new RpcConnectManager();
     /**
-     * 统一使用单例工厂生产ConnectManager单例
+     * 客户端发起连接失败的重试最大次数
      */
-    private RpcConnectManager(){}
-
-    public static RpcConnectManager getInstance() {
-        return RPC_CONNECT_MANAGER;
-    }
-
+    private Integer connectFailRetryMaximum = 3;
+    /**
+     * 当前重试次数
+     */
+    private final AtomicInteger retryIndex = new AtomicInteger();
     /**
      * 客户端发起连接（调用连接管理器的连接方法）
      * 更新可用的服务器连接
@@ -145,7 +142,7 @@ public class RpcConnectManager {
         //	添加监听 连接成功的时候 将新连接放入缓存中
         channelFuture.addListener((ChannelFutureListener) future -> {
             if(future.isSuccess()) {
-                log.info("successfully initClient to remote server, remote address:{}",socketAddress);
+                log.info("successfully init client to remote server, remote address:{}",socketAddress);
                 // 从pipeline中找到业务处理的RpcClientHandler
                 RpcClientHandler handler = future.channel().pipeline().get(RpcClientHandler.class);
                 // 添加至缓存中
@@ -157,11 +154,15 @@ public class RpcConnectManager {
         channelFuture.channel().closeFuture().addListener((ChannelFutureListener) future -> {
             log.info("channelFuture.channel close complete, remote address:{}",socketAddress);
             future.channel().eventLoop().schedule(() -> {
-                log.warn("initClient fail, ready to reconnect.. ");
+                if(connectFailRetryMaximum < retryIndex.incrementAndGet()){
+                    log.error("client connect fail,please check the address:{}",socketAddress);
+                    stop();
+                }
+                log.warn("connect server fail,current retry count:{}, ready to reconnect.. ",retryIndex);
                 // 清空对应资源再重新发起连接
                 clearAllConnectedResources();
                 connect(bootstrap, socketAddress);
-            }, 3, TimeUnit.SECONDS);
+            }, 300, TimeUnit.MILLISECONDS);
         });
     }
 

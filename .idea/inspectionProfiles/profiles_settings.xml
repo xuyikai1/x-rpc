@@ -1,0 +1,14 @@
+<component name="InspectionProjectProfileManager">
+  <settings>
+    <info color="3cbe0f">
+      <option name="BACKGROUND" value="be2019" />
+      <option name="ERROR_STRIPE_COLOR" value="3cbe0f" />
+      <option name="myName" value="checkStyleWarning" />
+      <option name="myVal" value="50" />
+      <option name="myExternalName" value="checkStyleWarning" />
+      <option name="myDefaultAttributes">
+        <option name="ERROR_STRIPE_COLOR" value="3cbe0f" />
+      </option>
+    </info>
+  </settings>
+</component>

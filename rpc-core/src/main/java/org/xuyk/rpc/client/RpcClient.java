@@ -3,6 +3,7 @@ package org.xuyk.rpc.client;
 import cn.hutool.core.collection.CollectionUtil;
 import org.xuyk.rpc.client.proxy.RpcAsyncProxy;
 import org.xuyk.rpc.client.proxy.RpcProxyImpl;
+import org.xuyk.rpc.common.SingletonFactory;
 
 import java.lang.reflect.Proxy;
 import java.util.Map;
@@ -19,6 +20,8 @@ public class RpcClient {
 
     private long timeout;
 
+    private RpcConnectManager rpcConnectManager;
+
     private final Map<Class<?>, Object> syncProxyInstanceMap = new ConcurrentHashMap<>();
 
     private final Map<Class<?>, Object> asyncProxyInstanceMap = new ConcurrentHashMap<Class<?>, Object>();
@@ -31,15 +34,13 @@ public class RpcClient {
     public void initClient(String serverAddress, long timeout) {
         this.serverAddress = serverAddress;
         this.timeout = timeout;
-        // 获取RpcConnectManager单例
-        RpcConnectManager connectManager = RpcConnectManager.getInstance();
+        this.rpcConnectManager = SingletonFactory.getInstance(RpcConnectManager.class);
         // 发起连接 真正的连接为异步发起
-        connectManager.connect(CollectionUtil.newArrayList(serverAddress));
+        this.rpcConnectManager.connect(CollectionUtil.newArrayList(serverAddress));
     }
 
     public void stop() {
-        RpcConnectManager connectManager = RpcConnectManager.getInstance();
-        connectManager.stop();
+        rpcConnectManager.stop();
     }
 
     /**

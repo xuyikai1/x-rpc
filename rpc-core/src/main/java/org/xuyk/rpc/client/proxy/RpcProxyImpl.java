@@ -3,12 +3,14 @@ package org.xuyk.rpc.client.proxy;
 import org.xuyk.rpc.client.RpcClientHandler;
 import org.xuyk.rpc.client.RpcConnectManager;
 import org.xuyk.rpc.client.RpcFuture;
+import org.xuyk.rpc.common.SingletonFactory;
 import org.xuyk.rpc.entity.RpcRequest;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author: Xuyk
@@ -21,9 +23,14 @@ public class RpcProxyImpl<T> implements InvocationHandler, RpcAsyncProxy {
 
     private long timeout;
 
+    private RpcConnectManager rpcConnectManager;
+
+    private final AtomicInteger atomicInteger = new AtomicInteger();
+
     public RpcProxyImpl(Class<T> clazz, long timeout) {
         this.clazz = clazz;
         this.timeout = timeout;
+        this.rpcConnectManager = SingletonFactory.getInstance(RpcConnectManager.class);
     }
 
     /**
@@ -39,12 +46,15 @@ public class RpcProxyImpl<T> implements InvocationHandler, RpcAsyncProxy {
         request.setParameterTypes(method.getParameterTypes());
         request.setParameters(args);
 
-        //2.选择一个合适的Client任务处理器
-        RpcClientHandler handler = RpcConnectManager.getInstance().chooseHandler();
+        // 2.选择一个合适的Client任务处理器
+        RpcClientHandler handler = rpcConnectManager.chooseHandler();
 
-        //3. 发送真正的客户端请求 返回结果
+        if(handler == null){
+            return null;
+        }
+        // 3. 发送真正的客户端请求 返回结果
         RpcFuture future = handler.sendRequest(request);
-        return future.get(timeout, TimeUnit.SECONDS);
+        return future.get(timeout, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -67,7 +77,8 @@ public class RpcProxyImpl<T> implements InvocationHandler, RpcAsyncProxy {
         request.setParameterTypes(parameterTypes);
 
         //2.选择一个合适的Client任务处理器
-        RpcClientHandler handler = RpcConnectManager.getInstance().chooseHandler();
+//        RpcClientHandler handler = RpcConnectManager.getInstance().chooseHandler();
+        RpcClientHandler handler = rpcConnectManager.chooseHandler();
         return handler.sendRequest(request);
     }
 
