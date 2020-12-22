@@ -1,82 +1,69 @@
 package org.xuyk.rpc.client;
 
-import cn.hutool.core.collection.CollectionUtil;
-import org.xuyk.rpc.client.proxy.RpcAsyncProxy;
-import org.xuyk.rpc.client.proxy.RpcProxyImpl;
-import org.xuyk.rpc.common.SingletonFactory;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.xuyk.rpc.factory.SingletonFactory;
 
-import java.lang.reflect.Proxy;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.net.InetSocketAddress;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @Author: Xuyk
  * @Description: Rpc客户端
  * @Date: 2020/12/18
  */
+@Slf4j
 public class RpcClient {
 
-    private String serverAddress;
+    private final Bootstrap bootstrap;
+    private final EventLoopGroup eventLoopGroup;
+    private RpcChannelHolder channelProvider;
 
-    private long timeout;
-
-    private RpcConnectManager rpcConnectManager;
-
-    private final Map<Class<?>, Object> syncProxyInstanceMap = new ConcurrentHashMap<>();
-
-    private final Map<Class<?>, Object> asyncProxyInstanceMap = new ConcurrentHashMap<Class<?>, Object>();
-
-    /**
-     * 发起连接
-     * @param serverAddress
-     * @param timeout
-     */
-    public void initClient(String serverAddress, long timeout) {
-        this.serverAddress = serverAddress;
-        this.timeout = timeout;
-        this.rpcConnectManager = SingletonFactory.getInstance(RpcConnectManager.class);
-        // 发起连接 真正的连接为异步发起
-        this.rpcConnectManager.connect(CollectionUtil.newArrayList(serverAddress));
+    public RpcClient(){
+        // 初始化nettyClient
+        bootstrap = new Bootstrap();
+        eventLoopGroup = new NioEventLoopGroup();
+        bootstrap.group(eventLoopGroup)
+                .channel(NioSocketChannel.class)
+                // 禁止数据包合并
+                .option(ChannelOption.TCP_NODELAY, true)
+                .handler(new RpcClientInitializer());
+        // 获取channel缓存类
+        this.channelProvider = SingletonFactory.getInstance(RpcChannelHolder.class);
     }
 
-    public void stop() {
-        rpcConnectManager.stop();
+    @SneakyThrows
+    public Channel doConnect(InetSocketAddress inetSocketAddress){
+        CompletableFuture<Channel> completableFuture = new CompletableFuture<>();
+        bootstrap.connect(inetSocketAddress).addListener((ChannelFutureListener) future -> {
+            if (future.isSuccess()) {
+                log.info("The client has connected {} successful!", inetSocketAddress.toString());
+                completableFuture.complete(future.channel());
+            } else {
+                throw new IllegalStateException();
+            }
+        });
+        return completableFuture.get();
     }
 
-    /**
-     * 	$invokeSync 同步调用方法
-     * 	通过类信息获取到代理类（缓存）
-     * @param <T>
-     * @param interfaceClass
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T invokeSync(Class<T> interfaceClass) {
-        if(syncProxyInstanceMap.containsKey(interfaceClass)) {
-            return (T) syncProxyInstanceMap.get(interfaceClass);
-        } else {
-            Object proxy = Proxy.newProxyInstance(interfaceClass.getClassLoader(),
-                    new Class<?>[] {interfaceClass},
-                    new RpcProxyImpl<>(interfaceClass, timeout));
-            syncProxyInstanceMap.put(interfaceClass, proxy);
-            return (T)proxy;
+    public Channel getChannel(InetSocketAddress inetSocketAddress) {
+        Channel channel = channelProvider.get(inetSocketAddress);
+        if (channel == null) {
+            channel = doConnect(inetSocketAddress);
+            channelProvider.set(inetSocketAddress, channel);
         }
+        return channel;
     }
 
-    /**
-     * 	$invokeAsync 异步调用方式的方法
-     * @param <T>
-     * @param interfaceClass
-     * @return
-     */
-    public <T> RpcAsyncProxy invokeAsync(Class<T> interfaceClass) {
-        if(asyncProxyInstanceMap.containsKey(interfaceClass)) {
-            return (RpcAsyncProxy) asyncProxyInstanceMap.get(interfaceClass);
-        } else {
-            RpcProxyImpl<T> asyncProxyInstance = new RpcProxyImpl<>(interfaceClass, timeout);
-            asyncProxyInstanceMap.put(interfaceClass, asyncProxyInstance);
-            return asyncProxyInstance;
-        }
+    public void close() {
+        eventLoopGroup.shutdownGracefully();
     }
 
 }

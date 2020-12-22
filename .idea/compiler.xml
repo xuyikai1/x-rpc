@@ -8,10 +8,16 @@
         <outputRelativeToContentRoot value="true" />
         <module name="rpc-core" />
         <module name="rpc-demo" />
+        <module name="rpc-example-api" />
+        <module name="rpc-example-client" />
+        <module name="rpc-example-common" />
+        <module name="rpc-example-server" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="netty-demo" target="1.5" />
+      <module name="rpc-test-common" target="1.8" />
+      <module name="rpc-test-server" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

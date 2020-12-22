@@ -11,10 +11,10 @@ import io.netty.handler.codec.MessageToByteEncoder;
  */
 public class RpcEncoder extends MessageToByteEncoder<Object> {
 
-    private Class<?> genericClass;
+    private Class<?> clazz;
 
-    public RpcEncoder(Class<?> genericClass) {
-        this.genericClass = genericClass;
+    public RpcEncoder(Class<?> clazz) {
+        this.clazz = clazz;
     }
 
     /**
@@ -26,7 +26,7 @@ public class RpcEncoder extends MessageToByteEncoder<Object> {
     @Override
     protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
         // 判断msg和genericClass是否为同一类型
-        if(genericClass.isInstance(msg)) {
+        if(clazz.isInstance(msg)) {
             // protostuff序列化
             byte[] data = ProtostuffSerializer.serialize(msg);
             // 消息分为：1.包头 (数据包长度)  2.包体(数据包内容)

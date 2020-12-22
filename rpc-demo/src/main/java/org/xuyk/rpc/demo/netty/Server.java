@@ -53,7 +53,7 @@ public class Server {
             // 等待服务端监听端口关闭
             f.channel().closeFuture().sync();
         } catch (InterruptedException e) {
-            log.error("occur exception when start server:", e);
+            log.error("occur exception when start server:{}", e);
         } finally {
             log.error("shutdown bossGroup and workerGroup");
             bossGroup.shutdownGracefully();

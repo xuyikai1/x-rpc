@@ -9,9 +9,9 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <description>rpc核心部分</description>
-
+    <description>rpc核心组件</description>
     <artifactId>rpc-core</artifactId>
 
+    <packaging>jar</packaging>
 
 </project>

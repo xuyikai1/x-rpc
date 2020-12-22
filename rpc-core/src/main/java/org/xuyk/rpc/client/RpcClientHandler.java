@@ -8,12 +8,10 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.xuyk.rpc.entity.RpcRequest;
+import org.xuyk.rpc.factory.SingletonFactory;
 import org.xuyk.rpc.entity.RpcResponse;
 
 import java.net.SocketAddress;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @Author: Xuyk
@@ -29,10 +27,8 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
      * 客户端所要连接的远程地址SocketAddress
      */
     private SocketAddress socketAddress;
-    /**
-     * key：requestId value：RpcFuture
-     */
-    private Map<String, RpcFuture> pendingRpcResponseTable = new ConcurrentHashMap<>();
+
+    private RpcUnprocessedRequests unprocessedRequests = SingletonFactory.getInstance(RpcUnprocessedRequests.class);
     /**
      * 通道注册的时候触发此方法
      */
@@ -47,11 +43,9 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
      */
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        log.debug("RpcClientHandler channel active...");
         super.channelActive(ctx);
         this.socketAddress = this.channel.remoteAddress();
     }
-
 
     /**
      * 对服务端的响应内容做处理
@@ -62,12 +56,7 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, RpcResponse response) throws Exception {
         log.info("Client receive Server msg:{}", JSONUtil.toJsonStr(response));
-        String requestId = response.getRequestId();
-        RpcFuture rpcFuture = pendingRpcResponseTable.get(requestId);
-        if(rpcFuture != null) {
-            pendingRpcResponseTable.remove(requestId);
-            rpcFuture.done(response);
-        }
+        unprocessedRequests.complete(response);
     }
 
     /**
@@ -76,18 +65,6 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
      */
     void close() {
         channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-    }
-
-    /**
-     * 	异步发送请求方法
-     * @param request
-     * @return
-     */
-    public RpcFuture sendRequest(RpcRequest request) {
-        RpcFuture rpcFuture = new RpcFuture(request);
-        pendingRpcResponseTable.put(request.getRequestId(), rpcFuture);
-        channel.writeAndFlush(request);
-        return rpcFuture;
     }
 
 }

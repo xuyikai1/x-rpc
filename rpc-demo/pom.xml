@@ -12,5 +12,6 @@
     <description>rpc相关组件demo</description>
     <artifactId>rpc-demo</artifactId>
 
+    <packaging>jar</packaging>
 
 </project>

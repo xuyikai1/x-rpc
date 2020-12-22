@@ -13,10 +13,10 @@ import java.util.List;
  */
 public class RpcDecoder extends ByteToMessageDecoder {
 
-    private Class<?> genericClass;
+    private Class<?> clazz;
 
-    public RpcDecoder(Class<?> genericClass) {
-        this.genericClass = genericClass;
+    public RpcDecoder(Class<?> clazz) {
+        this.clazz = clazz;
     }
 
 
@@ -26,7 +26,6 @@ public class RpcDecoder extends ByteToMessageDecoder {
         if(in.readableBytes() < 4) {
             return;
         }
-
         // 首先记录一下当前的位置
         in.markReaderIndex();
         // 当前请求数据包的大小读取出来
@@ -36,14 +35,11 @@ public class RpcDecoder extends ByteToMessageDecoder {
             in.resetReaderIndex();
             return;
         }
-
         // 真正读取需要长度的数据包内容
         byte[] data = new byte[dataLength];
         in.readBytes(data);
-
         // 解码
-        Object obj = ProtostuffSerializer.deserialize(data, genericClass);
-
+        Object obj = ProtostuffSerializer.deserialize(data, clazz);
         // 填充到buffer中 传播给下游handler做实际的处理
         out.add(obj);
     }

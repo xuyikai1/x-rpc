@@ -9,8 +9,10 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.xuyk.rpc.config.ProviderConfig;
+import org.xuyk.rpc.factory.SingletonFactory;
+import org.xuyk.rpc.entity.RpcServiceProperties;
 import org.xuyk.rpc.exception.RpcException;
 
 import java.util.HashMap;
@@ -33,6 +35,8 @@ public class RpcServer {
 
     private EventLoopGroup workerGroup = new NioEventLoopGroup();
 
+    private RpcServiceHolder serviceHolder;
+
     /**
      * key 接口名称
      * value 接口实现类的对象实例
@@ -43,13 +47,14 @@ public class RpcServer {
     public RpcServer(String host,Integer port) {
         this.host = host;
         this.port = port;
+        this.serviceHolder = SingletonFactory.getInstance(RpcServiceHolder.class);
     }
 
     /**
      * 服务端启动
-     * @throws InterruptedException
      */
-    public void startup() throws InterruptedException {
+    @SneakyThrows
+    public void startup(){
         if(StrUtil.isBlank(host) || port == null){
             throw new RpcException("invalid address, please check host or port");
         }
@@ -59,7 +64,7 @@ public class RpcServer {
                 .channel(NioServerSocketChannel.class)
                 //	tpc = sync + accept  = backlog
                 .option(ChannelOption.SO_BACKLOG, 1024)
-                .childHandler(new RpcServerInitializer(handlerMap));
+                .childHandler(new RpcServerInitializer());
 
         // 异步加监听
         ChannelFuture channelFuture = serverBootstrap.bind(host, port).sync();
@@ -72,24 +77,18 @@ public class RpcServer {
             }
         });
 
-        // 同步阻塞等待
-        /*try {
-            channelFuture.await(5000, TimeUnit.MILLISECONDS);
-            if(channelFuture.isSuccess()) {
-                log.info("start x-rpc success! ");
-            }
-        } catch (InterruptedException e) {
-            log.error("start x-rpc occur Interrupted, ex:{} ",e);
-        }*/
-
     }
 
     /**
-     * 程序注册器
-     * @param providerConfig
+     * 发布指定服务
+     * @param service
      */
-    public void registerProcessor(ProviderConfig providerConfig) {
-        handlerMap.put(providerConfig.getInterfaceClass(), providerConfig.getRef());
+    public void publishService(Object service){
+        Class<?> clazz = service.getClass().getInterfaces()[0];
+        String serviceName = clazz.getCanonicalName();
+        RpcServiceProperties properties = RpcServiceProperties.builder()
+                .serviceName(serviceName).build();
+        serviceHolder.addService(service,properties);
     }
 
     /**

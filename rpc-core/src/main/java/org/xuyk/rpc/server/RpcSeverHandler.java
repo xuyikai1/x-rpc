@@ -4,16 +4,14 @@ import cn.hutool.json.JSONUtil;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.reflect.FastClass;
 import net.sf.cglib.reflect.FastMethod;
+import org.xuyk.rpc.factory.SingletonFactory;
 import org.xuyk.rpc.entity.RpcRequest;
 import org.xuyk.rpc.entity.RpcResponse;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -24,20 +22,14 @@ import java.util.concurrent.TimeUnit;
  * @Date: 2020/12/19
  */
 @Slf4j
-@NoArgsConstructor
-@AllArgsConstructor
 public class RpcSeverHandler extends SimpleChannelInboundHandler<RpcRequest> {
 
-    /**
-     * key：调用接口名称
-     * value：接口实例
-     */
-    private Map<String, Object> handlerMap;
+    private RpcServiceHolder serviceHolder;
 
     private ThreadPoolExecutor executor = new ThreadPoolExecutor(16, 16, 600L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(65536));
 
-    RpcSeverHandler(Map<String, Object> handlerMap) {
-        this.handlerMap = handlerMap;
+    public RpcSeverHandler() {
+        this.serviceHolder = SingletonFactory.getInstance(RpcServiceHolder.class);
     }
 
     @Override
@@ -45,14 +37,14 @@ public class RpcSeverHandler extends SimpleChannelInboundHandler<RpcRequest> {
         // 异步进行业务处理 不阻塞当前handler的worker线程
         executor.submit(() -> {
             log.info("rpc server receive client request:{}", JSONUtil.toJsonStr(rpcRequest));
-            RpcResponse response = new RpcResponse();
+            RpcResponse<Object> response = new RpcResponse<>();
             response.setRequestId(rpcRequest.getRequestId());
             try {
-                Object result = handle(rpcRequest);
-                response.setResult(result);
+                response.setData(handleRequest(rpcRequest));
+                log.info("server return response:{}",JSONUtil.toJsonStr(response));
             } catch (Throwable t) {
                 response.setThrowable(t);
-                log.error("rpc service handle request Throwable:{},rpcRequest:{}",t,JSONUtil.toJsonStr(rpcRequest));
+                log.error("rpc service handleRequest request Throwable:{},rpcRequest:{}",t,JSONUtil.toJsonStr(rpcRequest));
             }
 
             ctx.writeAndFlush(response).addListener((ChannelFutureListener) future -> {
@@ -70,9 +62,9 @@ public class RpcSeverHandler extends SimpleChannelInboundHandler<RpcRequest> {
      * @return
      * @throws InvocationTargetException
      */
-    private Object handle(RpcRequest request) throws InvocationTargetException {
+    private Object handleRequest(RpcRequest request) throws InvocationTargetException {
         String className = request.getClassName();
-        Object serviceRef = handlerMap.get(className);
+        Object serviceRef = serviceHolder.getService(className);
         Class<?> serviceClass = serviceRef.getClass();
         String methodName = request.getMethodName();
         Class<?>[] parameterTypes = request.getParameterTypes();
