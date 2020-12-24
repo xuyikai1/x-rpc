@@ -25,6 +25,8 @@ public class RpcClientTest {
         // 2.getUser Test
         User user = userService.getUser(userId);
         log.info("user:{}", JSONUtil.toJsonStr(user));
+
+        clientProxy.getRpcClient().close();
     }
 
 }

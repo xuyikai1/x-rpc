@@ -1,8 +1,8 @@
 package org.xuyk.rpc.factory;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @Author: Xuyk
@@ -11,7 +11,7 @@ import java.util.Map;
  */
 public class SingletonFactory {
 
-    private static final Map<String, Object> OBJECT_MAP = new HashMap<>();
+    private static final Map<String, Object> OBJECT_MAP = new ConcurrentHashMap<>();
 
     private SingletonFactory() {
     }

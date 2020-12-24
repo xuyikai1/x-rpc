@@ -4,6 +4,7 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.xuyk.rpc.entity.RpcRequest;
 import org.xuyk.rpc.entity.RpcResponse;
@@ -21,14 +22,20 @@ import java.util.concurrent.CompletableFuture;
  * @Date: 2020/12/20
  */
 @Slf4j
+@Getter
 public class RpcClientProxy implements InvocationHandler{
 
     /**
      * 未被处理的请求 requestId
      */
     private RpcUnprocessedRequests unprocessedRequests;
+    /**
+     * Rpc客户端
+     */
+    private RpcClient rpcClient;
 
     public RpcClientProxy() {
+        this.rpcClient = SingletonFactory.getInstance(RpcClient.class);
         this.unprocessedRequests = SingletonFactory.getInstance(RpcUnprocessedRequests.class);
     }
     /**
@@ -60,7 +67,6 @@ public class RpcClientProxy implements InvocationHandler{
 
         // 2.发送真正的客户端请求 返回结果
         InetSocketAddress address = new InetSocketAddress("127.0.0.1",8765);
-        RpcClient rpcClient = new RpcClient();
         Channel channel = rpcClient.getChannel(address);
         if(channel == null || !channel.isActive()){
             throw new IllegalStateException();

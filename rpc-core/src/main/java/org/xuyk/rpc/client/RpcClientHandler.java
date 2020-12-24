@@ -1,15 +1,13 @@
 package org.xuyk.rpc.client;
 
 import cn.hutool.json.JSONUtil;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.xuyk.rpc.factory.SingletonFactory;
 import org.xuyk.rpc.entity.RpcResponse;
+import org.xuyk.rpc.factory.SingletonFactory;
 
 import java.net.SocketAddress;
 
@@ -57,14 +55,6 @@ public class RpcClientHandler extends SimpleChannelInboundHandler<RpcResponse> {
     protected void channelRead0(ChannelHandlerContext ctx, RpcResponse response) throws Exception {
         log.info("Client receive Server msg:{}", JSONUtil.toJsonStr(response));
         unprocessedRequests.complete(response);
-    }
-
-    /**
-     * Netty提供了一种主动关闭连接的方式
-     * 发送一个Unpooled.EMPTY_BUFFER 这样我们的ChannelFutureListener的close事件就会监听到并关闭通道
-     */
-    void close() {
-        channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
     }
 
 }

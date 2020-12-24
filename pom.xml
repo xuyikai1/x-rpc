@@ -25,56 +25,11 @@
         <slf4j.version>1.7.25</slf4j.version>
         <protostuff.version>1.7.2</protostuff.version>
         <logback.version>1.2.3</logback.version>
+        <curator-version>4.2.0</curator-version>
+        <netty.version>4.1.12.Final</netty.version>
     </properties>
 
     <dependencies>
-
-        <!-- spring整合 -->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-            <version>5.2.12.RELEASE</version>
-        </dependency>
-
-        <!-- Netty -->
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-            <version>4.1.12.Final</version>
-        </dependency>
-
-        <!-- 序列化协议 protostuff -->
-        <dependency>
-            <groupId>io.protostuff</groupId>
-            <artifactId>protostuff-core</artifactId>
-            <version>${protostuff.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.protostuff</groupId>
-            <artifactId>protostuff-runtime</artifactId>
-            <version>${protostuff.version}</version>
-        </dependency>
-
-        <!-- cglib -->
-        <dependency>
-            <groupId>cglib</groupId>
-            <artifactId>cglib</artifactId>
-            <version>3.3.0</version>
-        </dependency>
-
-        <!-- jackson -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.12.0</version>
-        </dependency>
-
-        <!-- 用于实例化特定类 -->
-        <dependency>
-            <groupId>org.objenesis</groupId>
-            <artifactId>objenesis</artifactId>
-            <version>3.1</version>
-        </dependency>
 
         <!-- 工具类 -->
         <dependency>

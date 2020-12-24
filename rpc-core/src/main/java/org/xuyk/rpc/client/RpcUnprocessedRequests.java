@@ -25,7 +25,8 @@ public class RpcUnprocessedRequests {
      */
     public void complete(RpcResponse rpcResponse) {
         CompletableFuture<RpcResponse> future = UNPROCESSED_RESPONSE_FUTURES.remove(rpcResponse.getRequestId());
-        if (null != future) {
+        if (future != null) {
+            // CompletableFuture的complete 任务执行完成后 设置返回的结果
             future.complete(rpcResponse);
         } else {
             throw new IllegalStateException();

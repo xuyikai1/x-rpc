@@ -3,12 +3,8 @@ package org.xuyk.rpc.factory;
 import cn.hutool.core.thread.NamedThreadFactory;
 import cn.hutool.core.util.RuntimeUtil;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * @Author: Xuyk
@@ -22,11 +18,11 @@ public class ThreadPoolExecutorFactory {
     /**
      * 吞吐量高的线程池缓存<businessName,ThreadPoolExecutor>
      */
-    private static final Map<String, ThreadPoolExecutor> HIGH_TPS_THREAD_POOL = new HashMap<>();
+    private static final Map<String, ThreadPoolExecutor> HIGH_TPS_THREAD_POOL = new ConcurrentHashMap<>();
     /**
      * 响应较快的线程池缓存<businessName,ThreadPoolExecutor>
      */
-    private static final Map<String, ThreadPoolExecutor> FAST_RT_THREAD_POOL = new HashMap<>();
+    private static final Map<String, ThreadPoolExecutor> FAST_RT_THREAD_POOL = new ConcurrentHashMap<>();
 
     private ThreadPoolExecutorFactory() {
     }

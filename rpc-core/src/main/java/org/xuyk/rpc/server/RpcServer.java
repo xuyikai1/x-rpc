@@ -8,22 +8,21 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.xuyk.rpc.factory.SingletonFactory;
 import org.xuyk.rpc.entity.RpcServiceProperties;
 import org.xuyk.rpc.exception.RpcException;
-
-import java.util.HashMap;
-import java.util.Map;
+import org.xuyk.rpc.factory.SingletonFactory;
 
 /**
  * @Author: Xuyk
- * @Description:
+ * @Description: Rpc服务端
  * @Date: 2020/12/19
  */
 @Slf4j
+@Getter
 @NoArgsConstructor
 public class RpcServer {
 
@@ -37,13 +36,6 @@ public class RpcServer {
 
     private RpcServiceHolder serviceHolder;
 
-    /**
-     * key 接口名称
-     * value 接口实现类的对象实例
-     * todo 通过自定义注解的方式注入
-     */
-    private volatile Map<String,Object> handlerMap = new HashMap<>();
-    
     public RpcServer(String host,Integer port) {
         this.host = host;
         this.port = port;

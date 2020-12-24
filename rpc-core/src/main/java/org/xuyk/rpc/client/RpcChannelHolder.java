@@ -4,6 +4,7 @@ import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -41,6 +42,14 @@ public class RpcChannelHolder {
             }
         }
         return null;
+    }
+
+    /**
+     * 获取所有channel
+     * @return
+     */
+    public Collection<Channel> getAll(){
+        return channelMap.values();
     }
 
     /**

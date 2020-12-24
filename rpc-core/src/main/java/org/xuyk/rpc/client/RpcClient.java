@@ -1,6 +1,7 @@
 package org.xuyk.rpc.client;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelOption;
@@ -12,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.xuyk.rpc.factory.SingletonFactory;
 
 import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -55,6 +57,7 @@ public class RpcClient {
 
     public Channel getChannel(InetSocketAddress inetSocketAddress) {
         Channel channel = channelProvider.get(inetSocketAddress);
+        // channel不存在则发起连接
         if (channel == null) {
             channel = doConnect(inetSocketAddress);
             channelProvider.set(inetSocketAddress, channel);
@@ -62,7 +65,19 @@ public class RpcClient {
         return channel;
     }
 
+    /**
+     * Netty提供了一种主动关闭连接的方式
+     * 发送一个Unpooled.EMPTY_BUFFER 这样我们的ChannelFutureListener的close事件就会监听到并关闭通道
+     */
     public void close() {
+        // 关闭通道连接
+        Collection<Channel> channels = channelProvider.getAll();
+        for (Channel channel : channels) {
+            if(channel != null && channel.isActive()){
+                channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+            }
+        }
+        // 关闭线程组
         eventLoopGroup.shutdownGracefully();
     }
 
