@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.xuyk.rpc.entity.RpcRequest;
 import org.xuyk.rpc.entity.RpcResponse;
 import org.xuyk.rpc.factory.SingletonFactory;
+import org.xuyk.rpc.registry.ServiceDiscovery;
+import org.xuyk.rpc.registry.zk.ZkServiceDiscovery;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -18,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * @Author: Xuyk
- * @Description:
+ * @Description: JDK动态代理
  * @Date: 2020/12/20
  */
 @Slf4j
@@ -28,18 +30,17 @@ public class RpcClientProxy implements InvocationHandler{
     /**
      * 未被处理的请求 requestId
      */
-    private RpcUnprocessedRequests unprocessedRequests;
-    /**
-     * Rpc客户端
-     */
-    private RpcClient rpcClient;
+    private final RpcUnprocessedRequests unprocessedRequests;
+    private final RpcClient rpcClient;
+    private final ServiceDiscovery serviceDiscovery;
 
     public RpcClientProxy() {
         this.rpcClient = SingletonFactory.getInstance(RpcClient.class);
         this.unprocessedRequests = SingletonFactory.getInstance(RpcUnprocessedRequests.class);
+        this.serviceDiscovery = SingletonFactory.getInstance(ZkServiceDiscovery.class);
     }
     /**
-     * 获取Cglib proxy
+     * jdk proxy
      * @param clazz
      * @param <T>
      * @return
@@ -65,8 +66,11 @@ public class RpcClientProxy implements InvocationHandler{
         request.setParameterTypes(method.getParameterTypes());
         request.setParameters(args);
 
+        // 2.服务发现
+        String serviceName = method.getDeclaringClass().getName();
+        InetSocketAddress address = serviceDiscovery.lookupService(serviceName);
+
         // 2.发送真正的客户端请求 返回结果
-        InetSocketAddress address = new InetSocketAddress("127.0.0.1",8765);
         Channel channel = rpcClient.getChannel(address);
         if(channel == null || !channel.isActive()){
             throw new IllegalStateException();

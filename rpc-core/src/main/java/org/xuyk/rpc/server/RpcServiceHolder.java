@@ -39,13 +39,13 @@ public class RpcServiceHolder {
      * @param rpcServiceProperties
      */
     public void addService(Object service, RpcServiceProperties rpcServiceProperties) {
-        String rpcServiceName = rpcServiceProperties.getServiceName();
-        if (registeredService.contains(rpcServiceName)) {
+        String serviceName = rpcServiceProperties.getServiceName();
+        if (registeredService.contains(serviceName)) {
             return;
         }
-        registeredService.add(rpcServiceName);
-        serviceMap.put(rpcServiceName, service);
-        log.info("Add service: {} and interfaces:{}", rpcServiceName, service.getClass().getInterfaces());
+        registeredService.add(serviceName);
+        serviceMap.put(serviceName, service);
+        log.info("Add service: {} and interfaces:{}", serviceName, service.getClass().getInterfaces());
     }
 
     /**

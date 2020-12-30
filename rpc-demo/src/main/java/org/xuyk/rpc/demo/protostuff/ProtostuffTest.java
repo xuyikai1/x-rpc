@@ -5,11 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * @Author: Xuyk
- * @Description:
+ * @Description: Protostuff序列化/反序列化 测试类
  * @Date: 2020/12/18
  */
 @Slf4j
-public class TestProtostuff {
+public class ProtostuffTest {
 
     public static void main(String[] args) {
         // 前提：发送接收两端都是使用java语言 如果异构 则需要使用protobuff

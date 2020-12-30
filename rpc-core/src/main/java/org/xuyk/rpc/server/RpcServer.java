@@ -1,5 +1,6 @@
 package org.xuyk.rpc.server;
 
+import cn.hutool.core.net.NetUtil;
 import cn.hutool.core.util.StrUtil;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -9,12 +10,16 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.xuyk.rpc.entity.RpcServiceProperties;
 import org.xuyk.rpc.exception.RpcException;
 import org.xuyk.rpc.factory.SingletonFactory;
+import org.xuyk.rpc.registry.ServiceRegistry;
+import org.xuyk.rpc.registry.zk.ZkServiceRegistry;
+
+import java.net.InetSocketAddress;
+
 
 /**
  * @Author: Xuyk
@@ -23,8 +28,12 @@ import org.xuyk.rpc.factory.SingletonFactory;
  */
 @Slf4j
 @Getter
-@NoArgsConstructor
 public class RpcServer {
+
+    /**
+     * 服务端默认绑定端口
+     */
+    public static final Integer DEFAULT_PORT = 9998;
 
     private String host;
 
@@ -36,10 +45,20 @@ public class RpcServer {
 
     private RpcServiceHolder serviceHolder;
 
+    private final ServiceRegistry serviceRegistry;
+
+    public RpcServer(){
+        this.host = NetUtil.getLocalhostStr();
+        this.port = DEFAULT_PORT;
+        this.serviceHolder = SingletonFactory.getInstance(RpcServiceHolder.class);
+        this.serviceRegistry = SingletonFactory.getInstance(ZkServiceRegistry.class);
+    }
+
     public RpcServer(String host,Integer port) {
         this.host = host;
-        this.port = port;
+        this.port = port == null ? DEFAULT_PORT : port;
         this.serviceHolder = SingletonFactory.getInstance(RpcServiceHolder.class);
+        this.serviceRegistry = SingletonFactory.getInstance(ZkServiceRegistry.class);
     }
 
     /**
@@ -81,6 +100,10 @@ public class RpcServer {
         RpcServiceProperties properties = RpcServiceProperties.builder()
                 .serviceName(serviceName).build();
         serviceHolder.addService(service,properties);
+
+        // 注册服务
+        InetSocketAddress address = new InetSocketAddress(host, port);
+        serviceRegistry.registerService(serviceName,address);
     }
 
     /**
