@@ -1,24 +1,22 @@
 package org.xuyk.rpc.server;
 
 import cn.hutool.json.JSONUtil;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
-import net.sf.cglib.reflect.FastClass;
-import net.sf.cglib.reflect.FastMethod;
-import org.xuyk.rpc.factory.SingletonFactory;
 import org.xuyk.rpc.entity.RpcRequest;
 import org.xuyk.rpc.entity.RpcResponse;
+import org.xuyk.rpc.exception.RpcException;
+import org.xuyk.rpc.factory.SingletonFactory;
+import org.xuyk.rpc.factory.ThreadPoolExecutorFactory;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.lang.reflect.Method;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @Author: Xuyk
- * @Description:
+ * @Description: 服务端处理客户端发送的请求
  * @Date: 2020/12/19
  */
 @Slf4j
@@ -26,10 +24,13 @@ public class RpcSeverHandler extends SimpleChannelInboundHandler<RpcRequest> {
 
     private RpcServiceHolder serviceHolder;
 
-    private ThreadPoolExecutor executor = new ThreadPoolExecutor(16, 16, 600L, TimeUnit.SECONDS, new ArrayBlockingQueue<>(65536));
+    private static final String EXECUTOR_POOL_NAME = "rpcSeverHandler";
+
+    private final ThreadPoolExecutor executor;
 
     public RpcSeverHandler() {
         this.serviceHolder = SingletonFactory.getInstance(RpcServiceHolder.class);
+        this.executor = ThreadPoolExecutorFactory.getHighTpsThreadPoolExecutor(EXECUTOR_POOL_NAME);
     }
 
     @Override
@@ -46,23 +47,17 @@ public class RpcSeverHandler extends SimpleChannelInboundHandler<RpcRequest> {
                 response.setThrowable(t);
                 log.error("rpc service handleRequest request Throwable:{},rpcRequest:{}",t,JSONUtil.toJsonStr(rpcRequest));
             }
-
-            ctx.writeAndFlush(response).addListener((ChannelFutureListener) future -> {
-                if(future.isSuccess()) {
-                    // afterRpcHook 后置处理器 可以实现一些自定义的内容（前置则可以在执行handle之前先操作）
-                }
-            });
-
+            // 返回响应结果
+            ctx.writeAndFlush(response);
         });
     }
 
     /**
-     * 通过反射调用对应的服务
+     * 通过反射调用对应的服务 返回结果
      * @param request
      * @return
-     * @throws InvocationTargetException
      */
-    private Object handleRequest(RpcRequest request) throws InvocationTargetException {
+    private Object handleRequest(RpcRequest request){
         String className = request.getClassName();
         Object serviceRef = serviceHolder.getService(className);
         Class<?> serviceClass = serviceRef.getClass();
@@ -70,12 +65,17 @@ public class RpcSeverHandler extends SimpleChannelInboundHandler<RpcRequest> {
         Class<?>[] parameterTypes = request.getParameterTypes();
         Object[] parameters = request.getParameters();
 
-        // JDK reflect
-
-        // Cglib reflect
-        FastClass serviceFastClass = FastClass.create(serviceClass);
-        FastMethod serviceFastMethod = serviceFastClass.getMethod(methodName, parameterTypes);
-        return serviceFastMethod.invoke(serviceRef, parameters);
+        try{
+            // JDK reflect
+            Method method = serviceClass.getMethod(methodName, parameterTypes);
+            return method.invoke(serviceRef, parameters);
+        } catch (NoSuchMethodException | IllegalArgumentException | InvocationTargetException | IllegalAccessException e) {
+            throw new RpcException(e.getMessage(), e);
+        }
+//         Cglib reflect
+//        FastClass serviceFastClass = FastClass.create(serviceClass);
+//        FastMethod serviceFastMethod = serviceFastClass.getMethod(methodName, parameterTypes);
+//        return serviceFastMethod.invoke(serviceRef, parameters);
     }
 
     /**

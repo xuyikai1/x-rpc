@@ -1,6 +1,5 @@
 package org.xuyk.rpc.server;
 
-import cn.hutool.core.net.NetUtil;
 import cn.hutool.core.util.StrUtil;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -12,13 +11,10 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.xuyk.rpc.entity.RpcServiceProperties;
+import org.springframework.stereotype.Component;
 import org.xuyk.rpc.exception.RpcException;
 import org.xuyk.rpc.factory.SingletonFactory;
-import org.xuyk.rpc.registry.ServiceRegistry;
-import org.xuyk.rpc.registry.zk.ZkServiceRegistry;
-
-import java.net.InetSocketAddress;
+import org.xuyk.rpc.utils.ServerNetUtils;
 
 
 /**
@@ -28,6 +24,7 @@ import java.net.InetSocketAddress;
  */
 @Slf4j
 @Getter
+@Component
 public class RpcServer {
 
     /**
@@ -43,22 +40,12 @@ public class RpcServer {
 
     private EventLoopGroup workerGroup = new NioEventLoopGroup();
 
-    private RpcServiceHolder serviceHolder;
-
-    private final ServiceRegistry serviceRegistry;
+    private final RpcServiceHolder rpcServiceHolder;
 
     public RpcServer(){
-        this.host = NetUtil.getLocalhostStr();
-        this.port = DEFAULT_PORT;
-        this.serviceHolder = SingletonFactory.getInstance(RpcServiceHolder.class);
-        this.serviceRegistry = SingletonFactory.getInstance(ZkServiceRegistry.class);
-    }
-
-    public RpcServer(String host,Integer port) {
-        this.host = host;
-        this.port = port == null ? DEFAULT_PORT : port;
-        this.serviceHolder = SingletonFactory.getInstance(RpcServiceHolder.class);
-        this.serviceRegistry = SingletonFactory.getInstance(ZkServiceRegistry.class);
+        this.host = ServerNetUtils.getServerHost();
+        this.port = ServerNetUtils.getServerPort();
+        this.rpcServiceHolder = SingletonFactory.getInstance(RpcServiceHolder.class);
     }
 
     /**
@@ -91,19 +78,11 @@ public class RpcServer {
     }
 
     /**
-     * 发布指定服务
+     * 发布服务
      * @param service
      */
     public void publishService(Object service){
-        Class<?> clazz = service.getClass().getInterfaces()[0];
-        String serviceName = clazz.getCanonicalName();
-        RpcServiceProperties properties = RpcServiceProperties.builder()
-                .serviceName(serviceName).build();
-        serviceHolder.addService(service,properties);
-
-        // 注册服务
-        InetSocketAddress address = new InetSocketAddress(host, port);
-        serviceRegistry.registerService(serviceName,address);
+        this.rpcServiceHolder.publishService(service);
     }
 
     /**
@@ -112,6 +91,7 @@ public class RpcServer {
     public void close() {
         bossGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
+
     }
 
 }

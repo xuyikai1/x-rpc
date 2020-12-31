@@ -1,8 +1,9 @@
-package org.xuyk.example.server.service.impl;
+package org.xuyk.rpc.example.server.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import org.xuyk.example.api.UserService;
-import org.xuyk.example.common.User;
+import org.xuyk.rpc.example.api.UserService;
+import org.xuyk.rpc.example.common.User;
+import org.xuyk.rpc.annotation.RpcService;
 
 /**
  * @Author: Xuyk
@@ -10,6 +11,7 @@ import org.xuyk.example.common.User;
  * @Date: 2020/12/22
  */
 @Slf4j
+@RpcService
 public class UserServiceImpl implements UserService {
 
     @Override

@@ -26,7 +26,7 @@ public class ZookeeperCuratorTest {
         List<String> childrenNodes = ZookeeperClient.getChildrenNodes(serviceName);
         log.info("childrenNodes:{}", JSONUtil.toJsonStr(childrenNodes));
 
-        // 3.再新增一个结点
+        // 3.再新增一个结点 查看是否监听器会有作用
         ZookeeperClient.createPersistentNode(serviceName,inetSocketAddress2);
 
         // 4.服务器关闭时 删除当前服务器地址的注册信息

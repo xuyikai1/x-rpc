@@ -1,6 +1,6 @@
-package org.xuyk.example.api;
+package org.xuyk.rpc.example.api;
 
-import org.xuyk.example.common.User;
+import org.xuyk.rpc.example.common.User;
 
 /**
  * @Author: Xuyk

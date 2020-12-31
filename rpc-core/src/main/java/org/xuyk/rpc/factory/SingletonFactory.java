@@ -1,6 +1,5 @@
 package org.xuyk.rpc.factory;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,10 +24,8 @@ public class SingletonFactory {
                 try {
                     instance = c.getDeclaredConstructor().newInstance();
                     OBJECT_MAP.put(key, instance);
-                } catch (IllegalAccessException | InstantiationException e) {
+                } catch (Exception e) {
                     throw new RuntimeException(e.getMessage(), e);
-                } catch (NoSuchMethodException | InvocationTargetException e) {
-                    e.printStackTrace();
                 }
             }
         }

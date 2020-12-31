@@ -8,7 +8,11 @@
     <artifactId>x-rpc</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <description>x-rpc</description>
+    <description>x-rpc框架</description>
+
+    <!-- rpc-core: x-rpc核心包 -->
+    <!-- rpc-demo: 一些技术点的demo使用范例 -->
+    <!-- rpc-example-*: x-rpc的使用范例 -->
     <modules>
         <module>rpc-core</module>
         <module>rpc-demo</module>

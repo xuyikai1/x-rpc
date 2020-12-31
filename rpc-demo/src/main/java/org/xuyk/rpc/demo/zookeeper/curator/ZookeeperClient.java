@@ -76,7 +76,7 @@ public class ZookeeperClient {
     }
 
     /**
-     * 创建持久节点
+     * 创建持久节点，添加对该服务节点的监听
      * 客户端连接断开节点不会像临时节点一样被删除
      * @param serviceName serviceName
      * @param inetSocketAddress server address

@@ -40,7 +40,7 @@ public class RpcClientProxy implements InvocationHandler{
         this.serviceDiscovery = SingletonFactory.getInstance(ZkServiceDiscovery.class);
     }
     /**
-     * jdk proxy
+     * 生成jdk代理
      * @param clazz
      * @param <T>
      * @return
@@ -52,8 +52,7 @@ public class RpcClientProxy implements InvocationHandler{
                 this);
     }
     /**
-     * 	invoke代理接口调用方式
-     * 	当客户端像调用本地方法一样调用代理类方法时，真正执行的内容
+     * 	客户端像调用本地方法一样调用代理类方法时，真正执行的内容
      */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -77,6 +76,7 @@ public class RpcClientProxy implements InvocationHandler{
         }
         CompletableFuture<RpcResponse> completableFuture = new CompletableFuture<>();
         unprocessedRequests.put(requestId, completableFuture);
+
         channel.writeAndFlush(request).addListener((ChannelFutureListener) future -> {
             if (future.isSuccess()) {
                 log.info("client send message success: {}", JSONUtil.toJsonStr(request));

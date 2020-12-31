@@ -1,4 +1,4 @@
-package org.xuyk.example.common;
+package org.xuyk.rpc.example.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

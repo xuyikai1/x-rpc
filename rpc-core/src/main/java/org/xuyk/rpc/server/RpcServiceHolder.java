@@ -4,6 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.xuyk.rpc.entity.RpcServiceProperties;
 import org.xuyk.rpc.enums.RpcErrorMessageEnum;
 import org.xuyk.rpc.exception.RpcException;
+import org.xuyk.rpc.factory.SingletonFactory;
+import org.xuyk.rpc.registry.ServiceRegistry;
+import org.xuyk.rpc.registry.zk.ZkServiceRegistry;
+import org.xuyk.rpc.utils.ServerNetUtils;
 
 import java.util.Map;
 import java.util.Set;
@@ -11,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @Author: Xuyk
- * @Description: 服务holder
+ * @Description: 服务holder 缓存管理已注册服务
  * @Date: 2020/12/22
  */
 @Slf4j
@@ -28,9 +32,12 @@ public class RpcServiceHolder {
      */
     private final Set<String> registeredService;
 
+    private final ServiceRegistry serviceRegistry;
+
     public RpcServiceHolder() {
         serviceMap = new ConcurrentHashMap<>();
         registeredService = ConcurrentHashMap.newKeySet();
+        this.serviceRegistry = SingletonFactory.getInstance(ZkServiceRegistry.class);
     }
 
     /**
@@ -68,6 +75,21 @@ public class RpcServiceHolder {
      */
     public Object getService(RpcServiceProperties properties) {
         return getService(properties.getServiceName());
+    }
+
+    /**
+     * 发布指定服务
+     * @param service
+     */
+    public void publishService(Object service){
+        Class<?> clazz = service.getClass().getInterfaces()[0];
+        String serviceName = clazz.getCanonicalName();
+        RpcServiceProperties properties = RpcServiceProperties.builder()
+                .serviceName(serviceName).build();
+        addService(service,properties);
+
+        // 注册服务
+        serviceRegistry.registerService(serviceName, ServerNetUtils.getServerAddress());
     }
 
 }
