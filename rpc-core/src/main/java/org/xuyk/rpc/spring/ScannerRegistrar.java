@@ -34,28 +34,28 @@ public class ScannerRegistrar implements ImportBeanDefinitionRegistrar, Resource
 
     @Override
     public void registerBeanDefinitions(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry beanDefinitionRegistry) {
-        //get the attributes and values ​​of RpcScan annotation
+        // 获取RpcScan注解的属性列表 basePackage..
         AnnotationAttributes rpcScanAnnotationAttributes = AnnotationAttributes.fromMap(annotationMetadata.getAnnotationAttributes(RpcScan.class.getName()));
         String[] rpcScanBasePackages = new String[0];
         if (rpcScanAnnotationAttributes != null) {
-            // get the value of the basePackage property
+            // 获取basePackage的属性值
             rpcScanBasePackages = rpcScanAnnotationAttributes.getStringArray(BASE_PACKAGE_ATTRIBUTE_NAME);
         }
         if (rpcScanBasePackages.length == 0) {
             rpcScanBasePackages = new String[]{((StandardAnnotationMetadata) annotationMetadata).getIntrospectedClass().getPackage().getName()};
         }
-        // Scan the RpcService annotation
+        // 扫描RpcService注解
         CustomAnnotationScanner rpcServiceScanner = new CustomAnnotationScanner(beanDefinitionRegistry, RpcService.class);
-        // Scan the Component annotation
+        // 扫描Component注解
         CustomAnnotationScanner springBeanScanner = new CustomAnnotationScanner(beanDefinitionRegistry, Component.class);
         if (resourceLoader != null) {
             rpcServiceScanner.setResourceLoader(resourceLoader);
             springBeanScanner.setResourceLoader(resourceLoader);
         }
-        int springBeanAmount = springBeanScanner.scan(SPRING_BEAN_BASE_PACKAGE);
-        log.info("springBeanScanner扫描的数量 [{}]", springBeanAmount);
+        int springBeanCount = springBeanScanner.scan(SPRING_BEAN_BASE_PACKAGE);
+        log.info("扫描spring注解数量：[{}]，扫描路径:{}", springBeanCount, SPRING_BEAN_BASE_PACKAGE);
         int rpcServiceCount = rpcServiceScanner.scan(rpcScanBasePackages);
-        log.info("rpcServiceScanner扫描的数量 [{}]", rpcServiceCount);
+        log.info("扫描x-rpc自定义注解数量 [{}]，扫描路径:{}", rpcServiceCount, rpcScanBasePackages);
 
     }
 

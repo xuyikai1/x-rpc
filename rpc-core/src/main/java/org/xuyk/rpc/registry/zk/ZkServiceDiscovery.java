@@ -13,13 +13,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author: Xuyk
- * @Description:
+ * @Description: zookeeper服务发现
  * @Date: 2020/12/29
  */
 @Slf4j
 public class ZkServiceDiscovery implements ServiceDiscovery {
 
-    private volatile AtomicInteger handlerIdx = new AtomicInteger();
+    private volatile AtomicInteger index = new AtomicInteger();
 
     @Override
     public InetSocketAddress lookupService(String serviceName) {
@@ -28,9 +28,9 @@ public class ZkServiceDiscovery implements ServiceDiscovery {
         if(CollectionUtil.isEmpty(childrenNodes)){
             throw new RpcException(RpcErrorMessageEnum.SERVICE_CAN_NOT_BE_FOUND, serviceName);
         }
-        // 2.根据【轮询】负载均衡策略
+        // 2.根据默认的【轮询】负载均衡策略
         int size = childrenNodes.size();
-        String targetServiceUrl = childrenNodes.get(((handlerIdx.getAndAdd(1) + size) % size));
+        String targetServiceUrl = childrenNodes.get(((index.getAndAdd(1) + size) % size));
         log.info("Successfully found the service address:[{}]", targetServiceUrl);
 
         // 3.拼接InetSocketAddress

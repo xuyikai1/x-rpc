@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @Author: Xuyk
- * @Description: 未处理的请求队列
+ * @Description: 待处理的请求队列
  * @Date: 2020/12/22
  */
 public class RpcUnprocessedRequests {

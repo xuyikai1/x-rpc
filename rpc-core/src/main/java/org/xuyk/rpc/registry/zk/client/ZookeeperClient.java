@@ -59,6 +59,9 @@ public class ZookeeperClient {
      */
     public static final String DEFAULT_ZOOKEEPER_ADDRESS = "127.0.0.1:2181";
 
+    /**
+     * 静态代码块 类初始化时发起连接
+     */
     static {
         String address = ResourcesUtils.getZookeeperAddress();
         // 重试策略 重试三次 分别等待1000ms/2000ms/4000ms后重试
@@ -158,6 +161,9 @@ public class ZookeeperClient {
         log.info("All registered services on the server are cleared:[{}]", REGISTERED_PATH_SET.toString());
     }
 
+    /**
+     * 关闭zk客户端
+     */
     public static void close(){
         zkClient.close();
     }

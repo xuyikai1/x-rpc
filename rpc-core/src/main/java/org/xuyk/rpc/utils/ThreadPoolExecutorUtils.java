@@ -70,7 +70,6 @@ public class ThreadPoolExecutorUtils {
      *  优雅关闭所有线程池
      */
     public static void shutDownAllThreadPool() {
-        log.info("call shutDownAllThreadPool method");
         // 使用并行流释放线程池资源
         THREAD_POOL_MAP.entrySet().parallelStream().forEach(entry -> {
             ThreadPoolTaskExecutor executor = entry.getValue();

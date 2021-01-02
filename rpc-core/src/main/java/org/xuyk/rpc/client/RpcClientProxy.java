@@ -69,7 +69,7 @@ public class RpcClientProxy implements InvocationHandler{
         String serviceName = method.getDeclaringClass().getName();
         InetSocketAddress address = serviceDiscovery.lookupService(serviceName);
 
-        // 2.发送真正的客户端请求 返回结果
+        // 2.获取服务端连接通道
         Channel channel = rpcClient.getChannel(address);
         if(channel == null || !channel.isActive()){
             throw new IllegalStateException();
@@ -77,6 +77,7 @@ public class RpcClientProxy implements InvocationHandler{
         CompletableFuture<RpcResponse> completableFuture = new CompletableFuture<>();
         unprocessedRequests.put(requestId, completableFuture);
 
+        // 3.发送真正的客户端请求 监听返回结果
         channel.writeAndFlush(request).addListener((ChannelFutureListener) future -> {
             if (future.isSuccess()) {
                 log.info("client send message success: {}", JSONUtil.toJsonStr(request));

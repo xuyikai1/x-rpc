@@ -7,7 +7,7 @@ import java.lang.annotation.*;
 
 /**
  * @Author: Xuyk
- * @Description:
+ * @Description: 扫描rpc自定义注解与spring注解
  * @Date: 2020/12/30
  */
 @Target(ElementType.TYPE)

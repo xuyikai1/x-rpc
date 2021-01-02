@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.xuyk.rpc.exception.RpcException;
 import org.xuyk.rpc.factory.SingletonFactory;
-import org.xuyk.rpc.hook.CustomShutdownHook;
+import org.xuyk.rpc.hook.ServerCustomShutdownHook;
 import org.xuyk.rpc.utils.ResourcesUtils;
 
 import java.net.InetSocketAddress;
@@ -57,7 +57,7 @@ public class RpcServer {
         }
 
         // 添加JVM钩子 用于应用关闭时 自动释放资源
-        CustomShutdownHook.getCustomShutdownHook().releaseResources();
+        ServerCustomShutdownHook.getCustomShutdownHook().releaseResources();
 
         ServerBootstrap serverBootstrap = new ServerBootstrap();
         serverBootstrap.group(bossGroup, workerGroup)
@@ -93,7 +93,6 @@ public class RpcServer {
     public void close() {
         bossGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
-
     }
 
 }

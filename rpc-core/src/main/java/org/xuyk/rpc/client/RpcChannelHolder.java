@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RpcChannelHolder {
 
     /**
+     * 连接通道缓存
      * key:inetSocketAddress.toString
      * value:channel
      */
@@ -25,6 +26,7 @@ public class RpcChannelHolder {
     public RpcChannelHolder() {
         channelMap = new ConcurrentHashMap<>();
     }
+
     /**
      * 根据连接信息获取channel
      * @param inetSocketAddress

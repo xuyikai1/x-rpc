@@ -11,6 +11,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.xuyk.rpc.factory.SingletonFactory;
+import org.xuyk.rpc.hook.ClientCustomShutdownHook;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -39,8 +40,15 @@ public class RpcClient {
                 .handler(new RpcClientInitializer());
         // 获取channel缓存类
         this.channelProvider = SingletonFactory.getInstance(RpcChannelHolder.class);
+        // 添加JVM钩子 用于应用关闭时 自动释放资源
+        ClientCustomShutdownHook.getCustomShutdownHook().releaseResources();
     }
 
+    /**
+     * 发起连接
+     * @param inetSocketAddress
+     * @return
+     */
     @SneakyThrows
     public Channel doConnect(InetSocketAddress inetSocketAddress){
         CompletableFuture<Channel> completableFuture = new CompletableFuture<>();
@@ -55,6 +63,11 @@ public class RpcClient {
         return completableFuture.get();
     }
 
+    /**
+     * 获取对应连接的channel
+     * @param inetSocketAddress
+     * @return
+     */
     public Channel getChannel(InetSocketAddress inetSocketAddress) {
         Channel channel = channelProvider.get(inetSocketAddress);
         // channel不存在则发起连接

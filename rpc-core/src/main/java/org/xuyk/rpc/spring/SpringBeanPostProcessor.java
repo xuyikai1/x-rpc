@@ -15,7 +15,7 @@ import java.lang.reflect.Field;
 
 /**
  * @Author: Xuyk
- * @Description:
+ * @Description: rpc自定义注解处理
  * @Date: 2020/12/30
  */
 @Slf4j
@@ -65,7 +65,7 @@ public class SpringBeanPostProcessor implements BeanPostProcessor {
                 try {
                     declaredField.set(bean, clientProxy);
                 } catch (IllegalAccessException e) {
-                    e.printStackTrace();
+                    log.error("injection proxy fail：{}",e);
                 }
             }
         }
