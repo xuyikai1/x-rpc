@@ -1,8 +1,6 @@
 package org.xuyk.rpc.registry.zk.client;
 
-import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
-import cn.hutool.setting.dialect.Props;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -11,6 +9,7 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
+import org.xuyk.rpc.utils.ResourcesUtils;
 
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -58,17 +57,16 @@ public class ZookeeperClient {
     /**
      * 默认连接服务端zk地址
      */
-    private static final String DEFAULT_ZOOKEEPER_ADDRESS = "127.0.0.1:2181";
+    public static final String DEFAULT_ZOOKEEPER_ADDRESS = "127.0.0.1:2181";
 
     static {
-        String address = new Props("zookeeper.properties").getStr("rpc.zookeeper.address");
-        String connectAddress = StrUtil.isNotBlank(address) ? address : DEFAULT_ZOOKEEPER_ADDRESS ;
+        String address = ResourcesUtils.getZookeeperAddress();
         // 重试策略 重试三次 分别等待1000ms/2000ms/4000ms后重试
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(BASE_SLEEP_TIME, MAX_RETRIES);
         // curator客户端
         zkClient = CuratorFrameworkFactory.builder()
                 // 连接服务端地址 格式：ip1:port1,ip2:port2...
-                .connectString(connectAddress)
+                .connectString(address)
                 .retryPolicy(retryPolicy)
                 .build();
         zkClient.start();
@@ -143,13 +141,14 @@ public class ZookeeperClient {
 
     /**
      * 当服务器关闭时 删除服务器在zk注册的信息
-     * @param inetSocketAddress
      */
-    public static void clearRegistry(InetSocketAddress inetSocketAddress) {
-        // 监听服务列表
+    public static void clearRegistry() {
+        // 使用并行流依次删除已注册的服务信息
         REGISTERED_PATH_SET.stream().parallel().forEach(p -> {
             try {
-                if (p.endsWith(inetSocketAddress.toString())) {
+                // 当前服务端地址
+                InetSocketAddress address = ResourcesUtils.getServerAddress();
+                if (p.endsWith(address.toString())) {
                     zkClient.delete().forPath(p);
                 }
             } catch (Exception e) {

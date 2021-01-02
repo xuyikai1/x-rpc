@@ -1,8 +1,6 @@
 package org.xuyk.rpc.example.server;
 
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.xuyk.rpc.annotation.RpcScan;
-import org.xuyk.rpc.server.RpcServer;
 
 /**
  * @Author: Xuyk
@@ -12,11 +10,11 @@ import org.xuyk.rpc.server.RpcServer;
 @RpcScan(basePackage = "org.xuyk.rpc")
 public class RpcServerTest2 {
 
-    public static void main(String[] args) {
-        AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext(RpcServerTest1.class);
-        RpcServer server = (RpcServer) applicationContext.getBean("rpcServer");
-        server.startup();
-    }
+//    public static void main(String[] args) {
+//        AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext(RpcServerTest1.class);
+//        RpcServer server = (RpcServer) applicationContext.getBean("rpcServer");
+//        server.startup();
+//    }
 
 }
 

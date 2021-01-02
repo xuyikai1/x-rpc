@@ -4,15 +4,15 @@ import cn.hutool.json.JSONUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.xuyk.rpc.entity.RpcRequest;
 import org.xuyk.rpc.entity.RpcResponse;
 import org.xuyk.rpc.exception.RpcException;
 import org.xuyk.rpc.factory.SingletonFactory;
-import org.xuyk.rpc.factory.ThreadPoolExecutorFactory;
+import org.xuyk.rpc.utils.ThreadPoolExecutorUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @Author: Xuyk
@@ -26,11 +26,11 @@ public class RpcSeverHandler extends SimpleChannelInboundHandler<RpcRequest> {
 
     private static final String EXECUTOR_POOL_NAME = "rpcSeverHandler";
 
-    private final ThreadPoolExecutor executor;
+    private final ThreadPoolTaskExecutor executor;
 
     public RpcSeverHandler() {
         this.serviceHolder = SingletonFactory.getInstance(RpcServiceHolder.class);
-        this.executor = ThreadPoolExecutorFactory.getHighTpsThreadPoolExecutor(EXECUTOR_POOL_NAME);
+        this.executor = ThreadPoolExecutorUtils.getHighTpsThreadPoolExecutor(EXECUTOR_POOL_NAME);
     }
 
     @Override
@@ -72,10 +72,10 @@ public class RpcSeverHandler extends SimpleChannelInboundHandler<RpcRequest> {
         } catch (NoSuchMethodException | IllegalArgumentException | InvocationTargetException | IllegalAccessException e) {
             throw new RpcException(e.getMessage(), e);
         }
-//         Cglib reflect
-//        FastClass serviceFastClass = FastClass.create(serviceClass);
-//        FastMethod serviceFastMethod = serviceFastClass.getMethod(methodName, parameterTypes);
-//        return serviceFastMethod.invoke(serviceRef, parameters);
+        /*// Cglib reflect
+        FastClass serviceFastClass = FastClass.create(serviceClass);
+        FastMethod serviceFastMethod = serviceFastClass.getMethod(methodName, parameterTypes);
+        return serviceFastMethod.invoke(serviceRef, parameters);*/
     }
 
     /**

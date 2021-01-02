@@ -1,6 +1,5 @@
 package org.xuyk.rpc.server;
 
-import cn.hutool.core.util.StrUtil;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -14,7 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.xuyk.rpc.exception.RpcException;
 import org.xuyk.rpc.factory.SingletonFactory;
-import org.xuyk.rpc.utils.ServerNetUtils;
+import org.xuyk.rpc.hook.CustomShutdownHook;
+import org.xuyk.rpc.utils.ResourcesUtils;
+
+import java.net.InetSocketAddress;
 
 
 /**
@@ -32,9 +34,7 @@ public class RpcServer {
      */
     public static final Integer DEFAULT_PORT = 9998;
 
-    private String host;
-
-    private Integer port;
+    private InetSocketAddress address;
 
     private EventLoopGroup bossGroup = new NioEventLoopGroup();
 
@@ -43,8 +43,7 @@ public class RpcServer {
     private final RpcServiceHolder rpcServiceHolder;
 
     public RpcServer(){
-        this.host = ServerNetUtils.getServerHost();
-        this.port = ServerNetUtils.getServerPort();
+        this.address = ResourcesUtils.getServerAddress();
         this.rpcServiceHolder = SingletonFactory.getInstance(RpcServiceHolder.class);
     }
 
@@ -53,9 +52,12 @@ public class RpcServer {
      */
     @SneakyThrows
     public void startup(){
-        if(StrUtil.isBlank(host) || port == null){
+        if(this.address == null){
             throw new RpcException("invalid address, please check host or port");
         }
+
+        // 添加JVM钩子 用于应用关闭时 自动释放资源
+        CustomShutdownHook.getCustomShutdownHook().releaseResources();
 
         ServerBootstrap serverBootstrap = new ServerBootstrap();
         serverBootstrap.group(bossGroup, workerGroup)
@@ -65,12 +67,12 @@ public class RpcServer {
                 .childHandler(new RpcServerInitializer());
 
         // 异步加监听
-        ChannelFuture channelFuture = serverBootstrap.bind(host, port).sync();
+        ChannelFuture channelFuture = serverBootstrap.bind(this.address.getAddress(), this.address.getPort()).sync();
         channelFuture.addListener((ChannelFutureListener) future -> {
             if(future.isSuccess()) {
-                log.info("server startup success, address: {}:{}",host,port);
+                log.info("server startup success, address: {}",this.address.toString());
             } else {
-                log.error("server startup fail, address: {}:{}",host,port);
+                log.error("server startup fail, address: {}",this.address.toString());
                 throw new RpcException("server start fail, cause: " + future.cause());
             }
         });
