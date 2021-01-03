@@ -6,7 +6,7 @@ import io.netty.handler.codec.MessageToByteEncoder;
 
 /**
  * @Author: Xuyk
- * @Description:
+ * @Description: 自定义编码器 protostuff编码
  * @Date: 2020/12/18
  */
 public class RpcEncoder extends MessageToByteEncoder<Object> {

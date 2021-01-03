@@ -11,7 +11,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.xuyk.rpc.factory.SingletonFactory;
-import org.xuyk.rpc.hook.ClientCustomShutdownHook;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -40,8 +39,6 @@ public class RpcClient {
                 .handler(new RpcClientInitializer());
         // 获取channel缓存类
         this.channelProvider = SingletonFactory.getInstance(RpcChannelHolder.class);
-        // 添加JVM钩子 用于应用关闭时 自动释放资源
-        ClientCustomShutdownHook.getCustomShutdownHook().releaseResources();
     }
 
     /**
@@ -57,6 +54,7 @@ public class RpcClient {
                 log.info("The client has connected {} successful!", inetSocketAddress.toString());
                 completableFuture.complete(future.channel());
             } else {
+                log.info("The client connect {} fail!", inetSocketAddress.toString());
                 throw new IllegalStateException();
             }
         });

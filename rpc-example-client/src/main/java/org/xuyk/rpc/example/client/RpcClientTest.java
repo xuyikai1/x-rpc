@@ -1,5 +1,6 @@
 package org.xuyk.rpc.example.client;
 
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -16,6 +17,7 @@ import org.xuyk.rpc.example.common.User;
 public class RpcClientTest {
 
     public static void main(String[] args) {
+        // spring 依赖查找
         AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext(RpcClientTest.class);
         UserController userController = (UserController) applicationContext.getBean("userController");
 
@@ -23,8 +25,12 @@ public class RpcClientTest {
         User user = userController.getUser(userId);
         log.info("【RpcServer response】:{}", JSONUtil.toJsonStr(user));
 
+        ThreadUtil.sleep(6000);
+
         String username = userController.getUsername(userId);
         log.info("【RpcServer response】:{}",username);
+
+        // 旧版 代理调用服务
         /*RpcClientProxy clientProxy = new RpcClientProxy();
         UserService userService = clientProxy.getProxy(UserService.class);
         String userId = "x-rpc";

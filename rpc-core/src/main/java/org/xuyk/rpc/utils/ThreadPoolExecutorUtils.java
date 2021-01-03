@@ -43,6 +43,7 @@ public class ThreadPoolExecutorUtils {
         // capacity > 0 -> LinkedBlockingQueue
         executor.setQueueCapacity(100);
         executor.setThreadNamePrefix(businessName);
+        executor.initialize();
         THREAD_POOL_MAP.put(businessName,executor);
         return executor;
     }
@@ -62,6 +63,7 @@ public class ThreadPoolExecutorUtils {
         // capacity = 0 -> SynchronousQueue
         executor.setQueueCapacity(0);
         executor.setThreadNamePrefix(businessName);
+        executor.initialize();
         THREAD_POOL_MAP.put(businessName,executor);
         return executor;
     }
