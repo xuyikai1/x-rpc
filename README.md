@@ -123,6 +123,10 @@ zookeeper节点情况：
 
 > 这里测试demo中客户端发送了两次请求
 
-## 5.感谢
+## 5.源码
+
+[GitHub - xuyikai1/x-rpc](https://github.com/xuyikai1/x-rpc)
+
+## 6.感谢
 
 项目很多细节都是参考 javaGuide 的[guide-rpc-framework](https://github.com/Snailclimb/guide-rpc-framework)，在这里表示感谢
