@@ -1,5 +1,7 @@
 # x-rpc
 
+> 加载不全试试[一款自定义RPC框架 x-rpc \| 寒暄](http://xuyk.top/posts/x-rpc.html)
+
 ## 1.介绍
 
 在微服务大行其道的2021，说到服务之间的通信，大家都会马上想到RPC（Remote Procedure Call Protocol）远程方法调用，也就是可以让我们调用远程第三方服务时能像调用本地方法一样简单快捷省事儿。其中被大家所熟知的就有SpringCloud中的Feign、Alibaba的Dubbo和谷歌的gRpc等。为了对这些框架有更深刻的了解，笔者自己尝试造了个轮子，也就是x-rpc。
